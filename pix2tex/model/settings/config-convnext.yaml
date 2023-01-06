@@ -1,0 +1,64 @@
+gpu_devices: null
+betas:
+- 0.9
+- 0.999
+batchsize: 16
+bos_token: 1
+channels: 1
+data: 
+debug: false
+decoder_args:
+  attn_on_attn: true
+  cross_attend: true
+  ff_glu: true
+  rel_pos_bias: false
+  use_scalenorm: false
+dec_drop: 0.0
+dec_ff_dim: 2048
+dim: 512
+emb_dropout: 0
+encoder_dims: [64, 128, 256, 512]  # the last dim must be equal to `dim` which was used in decoder
+encoder_depths: [3, 3, 9, 3]
+eos_token: 2
+epochs: 10
+gamma: 0.9995
+heads: 8
+id: null
+load_chkpt: null
+lr: 0.0001
+lr_step: 30
+max_seq_len: 512
+max_dimensions:
+- 992
+- 496
+max_height: 496
+max_width: 992
+min_height: 32
+min_width: 32
+min_dimensions:
+- 32
+- 32
+micro_batchsize: -1
+model_path: checkpoints_convnext
+name: pix2tex-convnext
+num_layers: 4
+num_tokens: 8000
+optimizer: AdamW
+output_path: outputs
+pad: false
+pad_token: 0
+patch_size: 16
+sample_freq: 2000
+save_freq: 5
+scheduler: StepLR
+seed: 42
+encoder_structure: convnext
+testdata: 
+temperature: 0.2
+test_samples: 5
+testbatchsize: 1000
+tokenizer: 
+valbatches: 100
+valdata:
+wandb: true
+weight_decay: 0.005
