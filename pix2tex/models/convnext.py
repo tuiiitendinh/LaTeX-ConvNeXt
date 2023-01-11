@@ -72,9 +72,6 @@ class Block(nn.Module):
 
 class LatexConvNeXtEncoder(nn.Module):
     r"""
-        modified from https://github.com/facebookresearch/ConvNeXt
-        A PyTorch impl of : `A ConvNet for the 2020s`  -   https://arxiv.org/pdf/2201.03545.pdf
-
     Args:
         in_chans (int): Number of input image channels. Default: 3
         depths (tuple(int)): Number of blocks at each stage. Default: [3, 3, 9, 3]
