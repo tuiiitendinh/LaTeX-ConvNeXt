@@ -1,0 +1,79 @@
+batchsize: 10
+betas:
+- 0.9
+- 0.999
+bos_token: 1
+channels: 1
+config: /kaggle/working/LaTeX-ConvNeXt/pix2tex/model/settings/config-convnext.yaml
+data: pix2tex/model/dataset/weai_train.pkl
+debug: false
+dec_drop: 0.0
+dec_ff_dim: 2048
+decoder_args:
+  attn_on_attn: true
+  cross_attend: true
+  ff_glu: true
+  rel_pos_bias: false
+  use_scalenorm: false
+device: cuda:0
+dim: 512
+emb_dropout: 0
+encoder_depths:
+- 3
+- 3
+- 9
+- 3
+encoder_dims:
+- 64
+- 128
+- 256
+- 512
+encoder_structure: convnext
+eos_token: 2
+epoch: 5
+epochs: 20
+gamma: 0.9995
+gpu_devices:
+- 0
+- 1
+heads: 8
+id: rooxzu4h
+load_chkpt: null
+lr: 0.0001
+lr_step: 30
+max_dimensions:
+- 992
+- 496
+max_height: 496
+max_seq_len: 512
+max_width: 992
+micro_batchsize: -1
+min_dimensions:
+- 32
+- 32
+min_height: 32
+min_width: 32
+model_path: checkpoints_convnext
+name: convnext_teacher
+no_cuda: false
+num_layers: 4
+num_tokens: 8000
+optimizer: AdamW
+output_path: outputs
+pad: false
+pad_token: 0
+patch_size: 16
+resume: false
+sample_freq: 2000
+save_freq: 5
+scheduler: StepLR
+seed: 42
+temperature: 0.2
+test_samples: 5
+testbatchsize: 1000
+testdata: pix2tex/model/dataset/weai_test.pkl
+tokenizer: pix2tex/model/dataset/weai_tokenizer.json
+valbatches: 100
+valdata: pix2tex/model/dataset/weai_valid.pkl
+wandb: true
+weight_decay: 0.05
