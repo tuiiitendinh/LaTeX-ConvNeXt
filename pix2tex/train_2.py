@@ -48,11 +48,18 @@ def train(args):
 
     def save_models(e, step=0, test = False):
         if test:
-            torch.save(model.state_dict(), os.path.join(out_path, '%s_e%02d_step%02d_test.pth' % (args.name, e+1, step)))
+            filename = os.path.join(out_path, '%s_e%02d_step%02d_test.pth' % (args.name, e+1, step))
         else:
-            torch.save(model.state_dict(), os.path.join(out_path, '%s_e%02d_step%02d.pth' % (args.name, e+1, step)))
+            filename = os.path.join(out_path, '%s_e%02d_step%02d.pth' % (args.name, e+1, step))
+        
+        # print("Name: ", filename)
+        # print("Model: ", model.state_dict())
+        torch.save(model.state_dict(), filename)
+        # torch.save(model.state_dict(), "test_1.pth")
+        
         yaml.dump(dict(args), open(os.path.join(out_path, 'config.yaml'), 'w+'))
-
+        print("Saved model at: ", filename)
+        
     opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas)
     scheduler = get_scheduler(args.scheduler)(opt, step_size=args.lr_step, gamma=args.gamma)
 
