@@ -1,10 +1,3 @@
-'''
-    Modified training phrase.
-    After every 5 times of doing validation testing.
-    The model will be called to perform the evaluation on the test set during training
-'''
-
-
 from pix2tex.dataset.dataset import Im2LatexDataset
 import os
 import argparse
@@ -18,6 +11,7 @@ import wandb
 import torch.nn as nn
 from pix2tex.eval import evaluate
 from pix2tex.models import get_model
+from torch.optim.lr_scheduler import OneCycleLR
 # from pix2tex.utils import *
 from pix2tex.utils import in_model_path, parse_args, seed_everything, get_optimizer, get_scheduler, gpu_memory_check
 
@@ -60,8 +54,15 @@ def train(args):
         yaml.dump(dict(args), open(os.path.join(out_path, 'config.yaml'), 'w+'))
         print("Saved model at: ", filename)
         
-    opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas)
-    scheduler = get_scheduler(args.scheduler)(opt, step_size=args.lr_step, gamma=args.gamma)
+    if args.optimizer == 'Adam':
+        opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas)
+    elif args.optimizer == 'AdamW':
+        opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas, eps=args.eps, weight_decay=args.weight_decay)
+    
+    if args.scheduler == 'StepLR':
+        scheduler = get_scheduler(args.scheduler)(opt, step_size=args.lr_step, gamma=args.gamma)
+    elif args.scheduler == 'OneCycleLR':
+        scheduler = get_scheduler(args.scheduler)(opt, max_lr=args.max_lr, epochs=args.epochs, steps_per_epoch=len(dataloader), pct_start=args.pct_start, anneal_strategy=args.anneal_strategy, div_factor = args.div_factor, final_div_factor=args.final_div_factor)
 
     microbatch = args.get('micro_batchsize', -1)
     if microbatch == -1:
@@ -88,6 +89,7 @@ def train(args):
                     dset.set_description('Loss: %.4f' % total_loss)
                     if args.wandb:
                         wandb.log({'train/loss': total_loss})
+                        wandb.log({'train/lr': scheduler.get_last_lr()[0]})
 
                 if (i+1+len(dataloader)*e) % args.sample_freq == 0:
                     #validation testing
@@ -112,7 +114,6 @@ def train(args):
                             save_models(e, step=i, test = True)  
                         test_counter = 0
                     model.train()
-                    
             #save model after every epoch            
             if (e+1) % args.save_freq == 0:
                 save_models(e, step=len(dataloader), test = False)
