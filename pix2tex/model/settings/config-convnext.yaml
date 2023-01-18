@@ -1,15 +1,19 @@
+#devices
+debug: false
+device: cuda
 gpu_devices:
 - 0
 - 1
 betas:
 - 0.9
 - 0.999
-batchsize: 8
+
+#model
+pad_token: 0
 bos_token: 1
+eos_token: 2
 channels: 1
-data: pix2tex/model/dataset/weai_train.pkl
-debug: false
-device: cuda:0
+gamma: 0.9995
 decoder_args:
   attn_on_attn: true
   cross_attend: true
@@ -22,12 +26,12 @@ dim: 512
 emb_dropout: 0
 encoder_dims: [64, 128, 256, 512]  # the last dim must be equal to `dim` which was used in decoder
 encoder_depths: [3, 3, 9, 3]
-eos_token: 2
-epochs: 20
-gamma: 0.9995
 heads: 8
-id: null
-load_chkpt: null
+
+#encoder - decoder
+encoder_structure: convnext
+num_layers: 4
+pad: false
 max_seq_len: 512
 max_dimensions:
 - 992
@@ -39,41 +43,46 @@ min_width: 32
 min_dimensions:
 - 32
 - 32
+
+#training
+batchsize: 32
 micro_batchsize: -1
-model_path: checkpoints_convnext
-name: pix2tex-convnext
-num_layers: 4
-num_tokens: 8000
+id: null
+load_chkpt: null
+epochs: 30
 optimizer: AdamW
+scheduler: OneCycleLR
+seed: 42
+
+model_path: checkpoints_convnext
+name: convnext_teacher
+num_tokens: 8000
+temperature: 0.2
 output_path: outputs
-pad: false
-pad_token: 0
 patch_size: 16
 sample_freq: 2000
 save_freq: 5
-scheduler: StepLR
-seed: 42
-encoder_structure: convnext
-testdata: pix2tex/model/dataset/weai_test.pkl
-temperature: 0.2
 test_samples: 5
 testbatchsize: 1000
-tokenizer: pix2tex/model/dataset/weai_tokenizer.json
 valbatches: 100
+
+data: pix2tex/model/dataset/weai_train.pkl
+testdata: pix2tex/model/dataset/weai_test.pkl
 valdata: pix2tex/model/dataset/weai_valid.pkl
+tokenizer: pix2tex/model/dataset/weai_tokenizer.json
 wandb: true
-lr: 1e-03
 
 #AdamW
-eps: 1e-08
-weight_decay: 1e-2
+lr: 0.001
+eps: 0.00000001
+weight_decay: 0.05
 
 #StepLR
 lr_step: 30
 
 #OneCycleLR
-max_lr: 0.1
+max_lr: 0.001
 pct_start: 0.3
 anneal_strategy: cos
-div_factor: 25.0
-final_div_factor: 10000.0
+div_factor: 12
+final_div_factor: 100
