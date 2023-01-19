@@ -1,11 +1,10 @@
-anneal_strategy: cos
 batchsize: 32
 betas:
 - 0.9
 - 0.999
 bos_token: 1
 channels: 1
-config: /kaggle/working/LaTeX-ConvNeXt/pix2tex/model/settings/config-convnext.yaml
+config: /kaggle/working/LaTeX-ConvNeXt/checkpoints_convnext/convnext_teacher_new/config.yaml
 data: pix2tex/model/dataset/weai_train.pkl
 debug: false
 dec_drop: 0.0
@@ -18,7 +17,6 @@ decoder_args:
   use_scalenorm: false
 device: cuda:0
 dim: 512
-div_factor: 12
 emb_dropout: 0
 encoder_depths:
 - 3
@@ -32,24 +30,22 @@ encoder_dims:
 - 512
 encoder_structure: convnext
 eos_token: 2
-epoch: 1
-epochs: 30
-eps: 1.0e-08
-final_div_factor: 100
+epoch: 5
+epochs: 20
+eps: 0.00000001
 gamma: 0.9995
 gpu_devices:
 - 0
 - 1
 heads: 8
 id: 16burten
-load_chkpt: null
-lr: 0.001
+load_chkpt: /kaggle/working/convnext_teacher_new_e06_step12379_test.pth
+lr: 0.0001
 lr_step: 30
 max_dimensions:
 - 992
 - 496
 max_height: 496
-max_lr: 0.001
 max_seq_len: 512
 max_width: 992
 micro_batchsize: -1
@@ -68,8 +64,8 @@ output_path: outputs
 pad: false
 pad_token: 0
 patch_size: 16
-pct_start: 0.3
-resume: false
+pct_start: 0.25
+resume: true
 sample_freq: 2000
 save_freq: 5
 scheduler: OneCycleLR
@@ -82,4 +78,4 @@ tokenizer: pix2tex/model/dataset/weai_tokenizer.json
 valbatches: 100
 valdata: pix2tex/model/dataset/weai_valid.pkl
 wandb: true
-weight_decay: 0.05
+weight_decay: 0.01
