@@ -74,6 +74,10 @@ def train(args):
         for e in range(args.epoch, args.epochs):
             args.epoch = e
             dset = tqdm(iter(dataloader))
+
+            #resets the memory allocation tracker at the beginning of each epoch
+            torch.cuda.reset_max_memory_allocated()
+
             for i, (seq, im) in enumerate(dset):    
                 if seq is not None and im is not None:
                     opt.zero_grad()
@@ -90,6 +94,9 @@ def train(args):
                     if args.wandb:
                         wandb.log({'train/loss': total_loss})
                         wandb.log({'train/lr': scheduler.get_last_lr()[0]})
+                    
+                    #releases unoccupied memory at the end of each iteration
+                    torch.cuda.empty_cache()    
 
                 if (i+1+len(dataloader)*e) % args.sample_freq == 0:
                     #validation testing
