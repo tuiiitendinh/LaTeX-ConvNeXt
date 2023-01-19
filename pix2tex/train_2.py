@@ -62,7 +62,7 @@ def train(args):
     if args.scheduler == 'StepLR':
         scheduler = get_scheduler(args.scheduler)(opt, step_size=args.lr_step, gamma=args.gamma)
     elif args.scheduler == 'OneCycleLR':
-        scheduler = get_scheduler(args.scheduler)(opt, max_lr=args.max_lr, epochs=args.epochs, steps_per_epoch=len(dataloader), pct_start=args.pct_start, anneal_strategy=args.anneal_strategy, div_factor = args.div_factor, final_div_factor=args.final_div_factor)
+        scheduler = get_scheduler(args.scheduler)(opt, max_lr=args.lr, pct_start=args.pct_start, total_steps=round(int(len(dataloader)*args.epochs)))
 
     microbatch = args.get('micro_batchsize', -1)
     if microbatch == -1:
