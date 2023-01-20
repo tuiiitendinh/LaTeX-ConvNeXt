@@ -103,10 +103,7 @@ def train(args):
                     test_counter += 1
                     with torch.no_grad():
                         model.eval()
-                        torch.cuda.empty_cache()
-                        # bleu_score_val, _ , token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs), name='val')
-                        #evaluate model on validation set on cuda:1
-                        bleu_score_val, _ , token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs), name='val', device = args.device)
+                        bleu_score_val, _, token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs), name='val')
                         if bleu_score_val > val_max_bleu and token_accuracy_val > val_max_token_acc:
                             val_max_bleu, val_max_token_acc = bleu_score_val, token_accuracy_val
                             save_models(e, step=i, test = False)
@@ -116,8 +113,7 @@ def train(args):
                 if test_counter == 5:
                     with torch.no_grad():
                         model.eval()
-                        torch.cuda.empty_cache()  
-                        bleu_score_test, edit_distance_test, token_accuracy_test = evaluate(model, testloader, args, num_batches=args.testbatchsize, name='test', device = args.device)
+                        bleu_score_test, edit_distance_test, token_accuracy_test = evaluate(model, testloader, args, num_batches=args.testbatchsize, name='test')
                         if bleu_score_test > test_max_bleu and token_accuracy_test > test_max_token_acc:
                             test_max_bleu, test_max_token_acc = bleu_score_test, token_accuracy_test
                             if args.wandb:
