@@ -29,7 +29,7 @@ def detokenize(tokens, tokenizer):
 
 
 @torch.no_grad()
-def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: int = None, name: str = 'test'):
+def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: int = None, name: str = 'test', device: torch.device = None):
     """evaluates the model. Returns bleu score on the dataset
 
     Args:
@@ -45,7 +45,7 @@ def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: i
     # print(dataset)
     # print(len(dataset))
     assert len(dataset) > 0
-    device = args.device
+    device = args.eval_device
     log = {}
     bleus, edit_dists, token_acc = [], [], []
     bleu_score, edit_distance, token_accuracy = 0, 1, 0

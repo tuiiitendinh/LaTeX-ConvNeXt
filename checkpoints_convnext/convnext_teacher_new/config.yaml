@@ -34,6 +34,7 @@ epoch: 5
 epochs: 20
 eps: 0.00000001
 gamma: 0.9995
+eval_device: cuda:1
 gpu_devices:
 - 0
 - 1
