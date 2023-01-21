@@ -1,4 +1,4 @@
-batchsize: 12
+batchsize: 10
 betas:
 - 0.9
 - 0.999
@@ -39,7 +39,7 @@ gpu_devices:
 - 1
 heads: 8
 id: 16burten
-load_chkpt: /kaggle/working/convnext_teacher_new_e07_step16229.pth
+load_chkpt: /kaggle/working/convnext_teacher_new_e09_step8543_test.pth
 lr: 0.001
 lr_step: 30
 max_dimensions:
