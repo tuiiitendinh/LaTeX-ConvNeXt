@@ -30,7 +30,7 @@ encoder_dims:
 - 512
 encoder_structure: convnext
 eos_token: 2
-epoch: 7
+epoch: 8
 epochs: 15
 eps: 0.00000001
 gamma: 0.9995
