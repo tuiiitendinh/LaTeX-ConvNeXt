@@ -30,8 +30,8 @@ encoder_dims:
 - 512
 encoder_structure: convnext
 eos_token: 2
-epoch: 6
-epochs: 20
+epoch: 7
+epochs: 15
 eps: 0.00000001
 gamma: 0.9995
 gpu_devices:
@@ -39,7 +39,7 @@ gpu_devices:
 - 1
 heads: 8
 id: 16burten
-load_chkpt: /kaggle/working/convnext_teacher_new_e06_step10379.pth
+load_chkpt: /kaggle/working/convnext_teacher_new_e07_step16229.pth
 lr: 0.001
 lr_step: 30
 max_dimensions:
