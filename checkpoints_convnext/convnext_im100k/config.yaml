@@ -5,7 +5,7 @@ betas:
 - 0.999
 bos_token: 1
 channels: 1
-data: pix2tex/model/dataset/weai_train.pkl
+data: pix2tex/model/dataset/weai_train_100k.pkl
 debug: false
 dec_drop: 0.0
 dec_ff_dim: 2048
@@ -72,9 +72,9 @@ seed: 42
 temperature: 0.2
 test_samples: 5
 testbatchsize: 200
-testdata: pix2tex/model/dataset/weai_test.pkl
-tokenizer: pix2tex/model/dataset/weai_tokenizer.json
+testdata: pix2tex/model/dataset/weai_test_100k.pkl
+tokenizer: pix2tex/model/dataset/weai_tokenizer_100k.json
 valbatches: 100
-valdata: pix2tex/model/dataset/weai_valid.pkl
+valdata: pix2tex/model/dataset/weai_valid_100k.pkl
 wandb: true
 weight_decay: 0.01
