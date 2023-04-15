@@ -76,7 +76,7 @@ def train(args):
             dset = tqdm(iter(dataloader))
 
             #resets the memory allocation tracker at the beginning of each epoch
-            torch.cuda.reset_max_memory_allocated()
+            torch.cuda.reset_max_memory_allocated(device=device)
 
             for i, (seq, im) in enumerate(dset):    
                 if seq is not None and im is not None:
@@ -100,17 +100,19 @@ def train(args):
 
                 if (i+1+len(dataloader)*e) % args.sample_freq == 0:
                     #validation testing
+                    torch.cuda.empty_cache()    
                     test_counter += 1
                     with torch.no_grad():
                         model.eval()
-                        bleu_score_val, _, token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs), name='val')
+                        bleu_score_val, _, token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs)%4, name='val')
                         if bleu_score_val > val_max_bleu and token_accuracy_val > val_max_token_acc:
                             val_max_bleu, val_max_token_acc = bleu_score_val, token_accuracy_val
                             save_models(e, step=i, test = False)
                     model.train()
                         
                 #test model on testing set each 5 times after validation test
-                if test_counter == 5:
+                if test_counter == 4:
+                    torch.cuda.empty_cache()    
                     with torch.no_grad():
                         model.eval()
                         bleu_score_test, edit_distance_test, token_accuracy_test = evaluate(model, testloader, args, num_batches=args.testbatchsize, name='test')
@@ -121,6 +123,7 @@ def train(args):
                             save_models(e, step=i, test = True)  
                         test_counter = 0
                     model.train()
+
             #save model after every epoch            
             if (e+1) % args.save_freq == 0:
                 save_models(e, step=len(dataloader), test = False)
