@@ -45,6 +45,7 @@ max_dimensions:
 - 896
 - 384
 max_height: 384
+max_lr: 0.0005
 max_seq_len: 512
 max_width: 896
 micro_batchsize: -1
@@ -67,7 +68,7 @@ pct_start: 0.25
 resume: true
 sample_freq: 2000
 save_freq: 5
-scheduler: OneCycleLR
+scheduler: StepLR
 seed: 42
 temperature: 0.2
 test_samples: 5
