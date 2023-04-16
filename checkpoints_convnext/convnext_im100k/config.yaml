@@ -1,5 +1,5 @@
 anneal_strategy: cos
-batchsize: 10
+batchsize: 16
 betas:
 - 0.9
 - 0.999
