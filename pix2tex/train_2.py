@@ -11,7 +11,6 @@ import wandb
 import torch.nn as nn
 from pix2tex.eval import evaluate
 from pix2tex.models import get_model
-from torch.optim.lr_scheduler import OneCycleLR
 # from pix2tex.utils import *
 from pix2tex.utils import in_model_path, parse_args, seed_everything, get_optimizer, get_scheduler, gpu_memory_check
 
@@ -26,7 +25,7 @@ def train(args):
 
     # add testdata in config file
     testloader = Im2LatexDataset().load(args.testdata)
-    testloader.update(**args, test=False)
+    testloader.update(**args, test=True)
 
     device = args.device
     model = get_model(args)
@@ -40,29 +39,39 @@ def train(args):
     if args.load_chkpt is not None:
         model.load_state_dict(torch.load(args.load_chkpt, map_location=device))
 
-    def save_models(e, step=0, test = False):
+    def save_models(e, step=0, test = False, last_epoch = False):
         if test:
             filename = os.path.join(out_path, '%s_e%02d_step%02d_test.pth' % (args.name, e+1, step))
         else:
             filename = os.path.join(out_path, '%s_e%02d_step%02d.pth' % (args.name, e+1, step))
-        
-        # print("Name: ", filename)
-        # print("Model: ", model.state_dict())
+            
+        if last_epoch:
+            filename = os.path.join(out_path, 'final_model.pth')
+
+        # old save function
         torch.save(model.state_dict(), filename)
-        # torch.save(model.state_dict(), "test_1.pth")
-        
+
+        # torch.save( {
+        #                 'epoch': e,
+        #                 'step': step,
+        #                 'model': model.state_dict(),
+        #                 'optimizer': opt.state_dict(),
+        #                 'scheduler': scheduler.state_dict(),
+        #                 'map_location': device,
+        #             }, filename)
+
         yaml.dump(dict(args), open(os.path.join(out_path, 'config.yaml'), 'w+'))
         print("Saved model at: ", filename)
-        
+
     if args.optimizer == 'Adam':
         opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas)
     elif args.optimizer == 'AdamW':
         opt = get_optimizer(args.optimizer)(model.parameters(), args.lr, betas=args.betas, eps=args.eps, weight_decay=args.weight_decay)
-    
+
     if args.scheduler == 'StepLR':
         scheduler = get_scheduler(args.scheduler)(opt, step_size=args.lr_step, gamma=args.gamma)
     elif args.scheduler == 'OneCycleLR':
-        scheduler = get_scheduler(args.scheduler)(opt, max_lr=args.lr, pct_start=args.pct_start, total_steps=round(int(len(dataloader)*args.epochs)))
+        scheduler = get_scheduler(args.scheduler)(opt, max_lr=args.max_lr, pct_start=args.pct_start, total_steps=round(int(len(dataloader)*args.epochs)))
 
     microbatch = args.get('micro_batchsize', -1)
     if microbatch == -1:
@@ -77,8 +86,9 @@ def train(args):
 
             #resets the memory allocation tracker at the beginning of each epoch
             torch.cuda.reset_max_memory_allocated(device=device)
-
-            for i, (seq, im) in enumerate(dset):    
+            
+            for i, (seq, im) in enumerate(dset):
+                torch.cuda.empty_cache()
                 if seq is not None and im is not None:
                     opt.zero_grad()
                     total_loss = 0
@@ -94,46 +104,62 @@ def train(args):
                     if args.wandb:
                         wandb.log({'train/loss': total_loss})
                         wandb.log({'train/lr': scheduler.get_last_lr()[0]})
-                    
-                    #releases unoccupied memory at the end of each iteration
-                    torch.cuda.empty_cache()    
 
+                    #releases unoccupied memory at the end of each iteration
+                torch.cuda.empty_cache()
                 if (i+1+len(dataloader)*e) % args.sample_freq == 0:
-                    #validation testing
-                    torch.cuda.empty_cache()    
+                    #validation testing 
                     test_counter += 1
                     with torch.no_grad():
+                        torch.cuda.empty_cache()
                         model.eval()
-                        bleu_score_val, _, token_accuracy_val = evaluate(model, valdataloader, args, num_batches=int(args.valbatches*e/args.epochs)%4, name='val')
+                        bleu_score_val, edit_distance_val, token_accuracy_val = evaluate(model, valdataloader, args, num_batches=round(int(args.valbatches*e/args.epochs)), name='val')
                         if bleu_score_val > val_max_bleu and token_accuracy_val > val_max_token_acc:
                             val_max_bleu, val_max_token_acc = bleu_score_val, token_accuracy_val
-                            save_models(e, step=i, test = False)
+                            save_models(e, step=i, test = False, last_epoch = False)
                     model.train()
-                        
-                #test model on testing set each 5 times after validation test
-                if test_counter == 4:
-                    torch.cuda.empty_cache()    
+
+                torch.cuda.empty_cache()
+                #test model on testing set each 3 times after validation test
+                if test_counter == 4 :
                     with torch.no_grad():
+                        torch.cuda.empty_cache()
                         model.eval()
                         bleu_score_test, edit_distance_test, token_accuracy_test = evaluate(model, testloader, args, num_batches=args.testbatchsize, name='test')
                         if bleu_score_test > test_max_bleu and token_accuracy_test > test_max_token_acc:
                             test_max_bleu, test_max_token_acc = bleu_score_test, token_accuracy_test
-                            if args.wandb:
-                                wandb.log({'test_periodically/bleu': bleu_score_test, 'test_periodically/edit_distance': edit_distance_test, 'test_periodically/token_accuracy': token_accuracy_test})
-                            save_models(e, step=i, test = True)  
+                            # if args.wandb:
+                            #     wandb.log({'test_periodically/bleu': bleu_score_test, 'test_periodically/edit_distance': edit_distance_test, 'test_periodically/token_accuracy': token_accuracy_test})
+                            save_models(e, step=i, test = True, last_epoch = False)
                         test_counter = 0
                     model.train()
 
-            #save model after every epoch            
+            
+            #test model after every epoch
+            # test_counter += 1
+            # if test_counter == 4:
+            #     model.eval()
+            #     with torch.no_grad():
+            #         bleu_score_test, edit_distance_test, token_accuracy_test = evaluate(model, testloader, args, num_batches=args.testbatchsize, name='test')
+            #         if bleu_score_test > test_max_bleu and token_accuracy_test > test_max_token_acc:
+            #             test_max_bleu, test_max_token_acc = bleu_score_test, token_accuracy_test
+            #             # if args.wandb:
+            #             #     wandb.log({'test_periodically/bleu': bleu_score_test, 'test_periodically/edit_distance': edit_distance_test, 'test_periodically/token_accuracy': token_accuracy_test})
+            #             save_models(e, step=i, test = True, last_epoch = False)
+            #         test_counter = 0
+            #     model.train()
+
+            #save model after every epoch
             if (e+1) % args.save_freq == 0:
-                save_models(e, step=len(dataloader), test = False)
+                save_models(e, step=len(dataloader), test = False, last_epoch = False)
             if args.wandb:
                 wandb.log({'train/epoch': e+1})
+
     except KeyboardInterrupt:
         if e >= 2:
-            save_models(e, step=i)
+            save_models(e, step=i, last_epoch = False)
         raise KeyboardInterrupt
-    save_models(e, step=len(dataloader), test = False)
+    save_models(e, step=len(dataloader), test = False, last_epoch = True)
 
 
 if __name__ == '__main__':
