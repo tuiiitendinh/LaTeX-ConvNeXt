@@ -37,7 +37,7 @@ gamma: 0.9995
 gpu_devices:
 - 0
 heads: 8
-id: convnext_im100k
+id: null
 load_chkpt: null
 lr: 0.0005
 lr_step: 30
