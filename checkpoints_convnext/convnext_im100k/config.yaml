@@ -30,14 +30,14 @@ encoder_dims:
 - 512
 encoder_structure: convnext
 eos_token: 2
-epochs: 15
+epochs: 100
 eps: 1.0e-08
 final_div_factor: 100
 gamma: 0.9995
 gpu_devices:
 - 0
 heads: 8
-id: null
+id: convnext_im100k
 load_chkpt: null
 lr: 0.0005
 lr_step: 30
@@ -68,10 +68,10 @@ pct_start: 0.25
 resume: true
 sample_freq: 2000
 save_freq: 5
-scheduler: StepLR
+scheduler: OneCycleLR
 seed: 42
-temperature: 0.2
-test_samples: 5
+temperature: 0.25
+test_samples: 10
 testbatchsize: 100
 testdata: pix2tex/model/dataset/weai_test_only_100k.pkl
 tokenizer: pix2tex/model/dataset/weai_tokenizer_only_100k.json
