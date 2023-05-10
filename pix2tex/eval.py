@@ -31,40 +31,26 @@ def detokenize(tokens, tokenizer):
 @torch.no_grad()
 def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: int = None, name: str = 'test'):
     """evaluates the model. Returns bleu score on the dataset
-
     Args:
         model (torch.nn.Module): the model
         dataset (Im2LatexDataset): test dataset
         args (Munch): arguments
         num_batches (int): How many batches to evaluate on. Defaults to None (all batches).
         name (str, optional): name of the test e.g. val or test for wandb. Defaults to 'test'.
-
     Returns:
         Tuple[float, float, float]: BLEU score of validation set, normed edit distance, token accuracy
     """
-    # print(dataset)
-    # print(len(dataset))
     assert len(dataset) > 0
     device = args.device
     log = {}
     bleus, edit_dists, token_acc = [], [], []
     bleu_score, edit_distance, token_accuracy = 0, 1, 0
     pbar = tqdm(enumerate(iter(dataset)), total=len(dataset))
-    # print(dataset.tokenizer)
-    # print(type(dataset.tokenizer))
-    
     for i, (seq, im) in pbar:
-        # print('\n',seq['input_ids'])
-        # print(seq['input_ids'].shape)
-        # print(im)
-        # print(im.shape)
-        # print("choox nafyasdakjsdn")
-        
         if seq is None or im is None:
             continue
-        # loss = decoder(tgt_seq, mask=tgt_mask, context=encoded)
+        #loss = decoder(tgt_seq, mask=tgt_mask, context=encoded)
         dec = model.generate(im.to(device), temperature=args.get('temperature', .2))
-        
         pred = detokenize(dec, dataset.tokenizer)
         truth = detokenize(seq['input_ids'], dataset.tokenizer)
         bleus.append(metrics.bleu_score(pred, [alternatives(x) for x in truth]))
@@ -82,31 +68,18 @@ def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: i
         mask = torch.logical_or(tgt_seq != args.pad_token, dec != args.pad_token)
         tok_acc = (dec == tgt_seq)[mask].float().mean().item()
         token_acc.append(tok_acc)
-        bleu_score = np.mean(bleus)
-        edit_distance = np.mean(edit_dists)
-        token_accuracy = np.mean(token_acc)
-        wandb.log({name + '/bleu': bleu_score})
-        wandb.log({name + '/edit_distance': edit_distance})
-        wandb.log({name + '/token_acc': token_accuracy})
-        pbar.set_description('BLEU: %.3f, ED: %.2e, ACC: %.3f' % (bleu_score, edit_distance, token_accuracy))
-        
-        
-        if pred != truth:
-            #log all error predict to csv file by pandas
-            df = pd.DataFrame({'ground truth': truth, 'prediction': pred})
-            df.to_csv(name + '- error_predict.csv', mode='a', header=False)
-            
+        pbar.set_description('BLEU: %.3f, ED: %.2e, ACC: %.3f' % (np.mean(bleus), np.mean(edit_dists), np.mean(token_acc)))
         if num_batches is not None and i >= num_batches:
             break
     if len(bleus) > 0:
         bleu_score = np.mean(bleus)
-        log[name +'/bleu'] = bleu_score
+        log[name+'/bleu'] = bleu_score
     if len(edit_dists) > 0:
         edit_distance = np.mean(edit_dists)
-        log[name +'/edit_distance'] = edit_distance
+        log[name+'/edit_distance'] = edit_distance
     if len(token_acc) > 0:
         token_accuracy = np.mean(token_acc)
-        log[name +'/token_acc'] = token_accuracy
+        log[name+'/token_acc'] = token_accuracy
     if args.wandb:
         # samples
         pred = token2str(dec, dataset.tokenizer)
@@ -119,7 +92,6 @@ def evaluate(model: Model, dataset: Im2LatexDataset, args: Munch, num_batches: i
     else:
         print('\n%s\n%s' % (truth, pred))
         print('BLEU: %.2f' % bleu_score)
-        # pass
     return bleu_score, edit_distance, token_accuracy
 
 
@@ -152,10 +124,11 @@ if __name__ == '__main__':
     args.temperature = parsed_args.temperature
     logging.getLogger().setLevel(logging.DEBUG if parsed_args.debug else logging.WARNING)
     seed_everything(args.seed if 'seed' in args else 42)
+    
     model = get_model(args)
-    if parsed_args.checkpoint is None:
-        with in_model_path():
-            parsed_args.checkpoint = os.path.realpath('checkpoints/weights.pth')
+    # if parsed_args.checkpoint is None:
+    #     with in_model_path():
+    #         parsed_args.checkpoint = os.path.realpath('checkpoints/weights.pth')
     model.load_state_dict(torch.load(parsed_args.checkpoint, args.device))
     dataset = Im2LatexDataset().load(parsed_args.data)
     # print(len(dataset))
