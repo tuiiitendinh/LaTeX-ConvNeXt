@@ -3,7 +3,6 @@ debug: false
 device: cuda
 gpu_devices:
 - 0
-- 1
 betas:
 - 0.9
 - 0.999
@@ -34,10 +33,10 @@ num_layers: 4
 pad: false
 max_seq_len: 512
 max_dimensions:
-- 992
-- 496
-max_height: 496
-max_width: 992
+- 896
+- 384
+max_height: 384
+max_width: 896
 min_height: 32
 min_width: 32
 min_dimensions:
@@ -45,17 +44,17 @@ min_dimensions:
 - 32
 
 #training
-batchsize: 32
+batchsize: 10
 micro_batchsize: -1
 id: null
 load_chkpt: null
-epochs: 30
+epochs: 4
 optimizer: AdamW
 scheduler: OneCycleLR
 seed: 42
 
 model_path: checkpoints_convnext
-name: convnext_teacher
+name: convnext_singleGPU
 num_tokens: 8000
 temperature: 0.2
 output_path: outputs
@@ -63,7 +62,7 @@ patch_size: 16
 sample_freq: 2000
 save_freq: 5
 test_samples: 5
-testbatchsize: 1000
+testbatchsize: 100
 valbatches: 100
 
 data: pix2tex/model/dataset/weai_train.pkl
@@ -73,16 +72,16 @@ tokenizer: pix2tex/model/dataset/weai_tokenizer.json
 wandb: true
 
 #AdamW
-lr: 0.001
+lr: 0.0001
 eps: 0.00000001
-weight_decay: 0.05
+weight_decay: 0.01
 
 #StepLR
 lr_step: 30
 
 #OneCycleLR
-max_lr: 0.001
-pct_start: 0.3
+max_lr: 0.0005
+pct_start: 0.25
 anneal_strategy: cos
 div_factor: 12
 final_div_factor: 100
